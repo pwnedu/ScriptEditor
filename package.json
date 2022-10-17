@@ -1,0 +1,23 @@
+{
+  "name": "com.kiltec.scripteditor",
+  "version": "0.0.11",
+  "displayName": "Script Editor by pwnedu",
+  "description": "Productivity tools for everyone",
+  "unity": "2018.1",
+  "documentationUrl": "https://github.com/pwnedu/ScriptEditor/wiki",
+  "licensesUrl": "https://github.com/pwnedu/ScriptEditor/blob/main/LICENSE",
+  "keywords": [
+    "unity",
+    "tools",
+    "editor",
+    "script",
+    "productivity",
+    "pwnedu",
+    "kiltec"
+  ],
+  "author": {
+    "name": "Kiltec",
+    "url": "https://github.com/pwnedu"
+  },
+  "type": "tool"
+}
