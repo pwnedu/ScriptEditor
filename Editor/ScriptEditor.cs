@@ -25,7 +25,6 @@ namespace pwnedu.ScriptEditor
 
         // Layouts
         private static ScriptStyle styleData;
-        //Color headerColour = new Color(55f / 255f, 0f / 255f, 175f / 255f, 1f);
         Color headerColour = new Color32(60, 60, 180, 255);
         Color borderColour = new Color32(180, 120, 80, 255);
         Texture2D headerTexture;
@@ -37,6 +36,8 @@ namespace pwnedu.ScriptEditor
         Rect windowRect;
         Rect bodySection;
         Rect footerSection;
+        //Rect highlightRect;
+        //TextEditor editor;
 
         Vector2 scrollPos;
         GUIStyle horizontalLine;
@@ -47,7 +48,7 @@ namespace pwnedu.ScriptEditor
         bool showRename = false;
         bool showDelete = false;
 
-        [MenuItem("Tools/Script Editor/Load Editor %&e", priority = 2)] // Shortcut [Ctrl + Alt + E]
+        [MenuItem("Tools/Script Editor/Open Editor %&e", priority = 2)] // Shortcut [Ctrl + Alt + E]
         public static void ShowWindow()
         {
             GetWindow(typeof(ScriptEditor));
@@ -64,7 +65,7 @@ namespace pwnedu.ScriptEditor
             SetStyle();
         }
 
-        private void OnHierarchyChange() // Fixes missing texture after leaving play mode.
+        private void OnHierarchyChange() // Fix missing texture after leaving play mode.
         {
             InitTextures();
             Repaint();
@@ -121,6 +122,16 @@ namespace pwnedu.ScriptEditor
             DrawContent();
             DrawFooter();
 
+            //if (popup && editor != null) 
+            //{
+            //    highlightRect = new Rect(editor.position);
+            //    highlightRect.width = 100;
+            //    highlightRect.height = 10;
+            //    GUILayout.BeginArea(highlightRect);
+            //    GUI.DrawTexture(highlightRect, borderTexture);
+            //    GUILayout.EndArea();
+            //}
+
             #region Popup Window
 
             if (popup)
@@ -161,6 +172,8 @@ namespace pwnedu.ScriptEditor
 
         private void DrawHeader()
         {
+            #region Header
+
             GUILayout.BeginArea(headerSection);
             if (headerTexture != null) { GUI.DrawTexture(headerSection, headerTexture); }
             GUILayout.Space(4);
@@ -170,10 +183,14 @@ namespace pwnedu.ScriptEditor
             ToolTip();
             SaveAndCloseButtons();
             SaveIndicator();
+
+            #endregion
         }
 
         private void DrawContent()
         {
+            #region Body
+
             if (borderTexture != null) { GUI.DrawTexture(bodySection, borderTexture); }
             GUILayout.BeginArea(bodySection);
             var space = 4;
@@ -183,8 +200,14 @@ namespace pwnedu.ScriptEditor
             scrollPos = GUILayout.BeginScrollView(scrollPos);
 
             EditorGUI.BeginChangeCheck();
-
-            codeText = GUILayout.TextArea(codeText, GUILayout.MaxHeight(bodySection.height), GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+            if (popup)
+            {
+                GUILayout.Label(codeText, EditorStyles.textArea, GUILayout.MaxHeight(bodySection.height), GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+            }
+            else
+            {
+                codeText = GUILayout.TextArea(codeText, GUILayout.MaxHeight(bodySection.height), GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+            }
             
             if (EditorGUI.EndChangeCheck())
             {
@@ -193,21 +216,25 @@ namespace pwnedu.ScriptEditor
             EditorGUILayout.EndScrollView();
             
             GUILayout.EndArea();
+
+            #endregion
         }
 
         private void DrawFooter()
         {
+            #region Footer
+
             if (borderTexture != null) { GUI.DrawTexture(footerSection, borderTexture); }
             GUILayout.BeginArea(footerSection);
 
             GUILayout.EndArea();
+
+            #endregion
         }
 
         private void SubMenu()
         {
             // Display Sub Menu
-
-
 
             //HorizontalLine(Color.grey);
             GUILayout.Space(5);
@@ -249,18 +276,12 @@ namespace pwnedu.ScriptEditor
                 EditorGUILayout.Space(10); 
             }
             GUILayout.EndVertical();
-            
-            
-            // Always On Display
-            //SaveAndCloseButtons();
-            
+
             GUILayout.EndHorizontal();
             EditorGUILayout.Space(2);
         }
 
-
-
-        private void DrawPopupWindow(int unusedWindowID)
+        private void DrawPopupWindow(int unusedWindowID) 
         {
             #region Popup Window Layout
 
@@ -268,15 +289,24 @@ namespace pwnedu.ScriptEditor
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Find"))
             {
+                TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+                if (editor.SelectedText != string.Empty)
+                {
+                    find = editor.SelectedText;
+                }
 
+                find = ScriptEditorDialogue.ShowDialogueWindow("Find", find);
+                Debug.Log("Button A Works");
             }
             if (GUILayout.Button("Rename"))
             {
-
+                ScriptEditorDialogue.ShowDialogueWindow("Rename", renameFile);
+                Debug.Log("Button B Works");
             }
             if (GUILayout.Button("Delete"))
             {
-
+                ScriptEditorDialogue.TestFromMenu();
+                Debug.Log("Button C Works");
             }
             GUILayout.FlexibleSpace();
             GUI.DragWindow();
