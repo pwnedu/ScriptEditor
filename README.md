@@ -1,2 +1,2 @@
 # ScriptEditor
-A Simple Script Editor for Unity
+A simple Script Editor for Unity
