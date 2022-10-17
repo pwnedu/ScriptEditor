@@ -1,8 +1,8 @@
 {
   "name": "com.kiltec.scripteditor",
-  "version": "0.0.11",
+  "version": "0.0.1",
   "displayName": "Script Editor by pwnedu",
-  "description": "Productivity tools for everyone",
+  "description": "A simplistic script editor for Unity",
   "unity": "2018.1",
   "documentationUrl": "https://github.com/pwnedu/ScriptEditor/wiki",
   "licensesUrl": "https://github.com/pwnedu/ScriptEditor/blob/main/LICENSE",
