@@ -1,18 +1,18 @@
 using UnityEngine;
 using UnityEditor;
 using System;
-using GluonGui.Dialog;
 
 namespace pwnedu.ScriptEditor
 {
     public class FindReplaceDialogue : EditorWindow
     {
+        bool findOnly;
+        string windowName;
         string find;
-        string replace;
+        readonly string replace;
         string entryFieldResult;
-        Tuple<string, string> result;
 
-        public static Tuple<string, string> ShowDialogueWindow(string windowName, string find)
+        public static Tuple<string, string> ShowDialogueWindow(string windowName, string find, bool findOnly)
         {
             #region Create Dialogue Window
 
@@ -22,8 +22,22 @@ namespace pwnedu.ScriptEditor
             dialog.minSize = new Vector2(320, 120);
             dialog.maxSize = new Vector2(320, 120);
 
-            dialog.find = find;
-            dialog.entryFieldResult = dialog.replace;
+            dialog.windowName = windowName;
+            dialog.findOnly = findOnly;
+
+            if (!string.IsNullOrEmpty(find))
+            {
+                dialog.find = find;
+            }
+            
+            if (findOnly)
+            {
+                dialog.entryFieldResult = dialog.find;
+            }
+            else
+            {
+                dialog.entryFieldResult = dialog.replace;
+            }
 
             dialog.ShowModal();
 
@@ -43,11 +57,14 @@ namespace pwnedu.ScriptEditor
             find = EditorGUILayout.TextField(find, GUILayout.Width(200));
             GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(20);
-            EditorGUILayout.LabelField("Replace:", GUILayout.Width(75));
-            entryFieldResult = EditorGUILayout.TextField(entryFieldResult, GUILayout.Width(200));
-            GUILayout.EndHorizontal();
+            if (!findOnly)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Space(20);
+                EditorGUILayout.LabelField("Replace:", GUILayout.Width(75));
+                entryFieldResult = EditorGUILayout.TextField(entryFieldResult, GUILayout.Width(200));
+                GUILayout.EndHorizontal();
+            }
 
             GUILayout.FlexibleSpace();
             GUILayout.BeginHorizontal();
@@ -58,7 +75,7 @@ namespace pwnedu.ScriptEditor
                 Cancelled();
             }
 
-            if (GUILayout.Button("Okay", GUILayout.Width(100)))
+            if (GUILayout.Button(windowName, GUILayout.Width(100)))
             {
                 Accepted();
             }
@@ -80,7 +97,7 @@ namespace pwnedu.ScriptEditor
 
         private void Cancelled()
         {
-            entryFieldResult = replace;
+            entryFieldResult = string.Empty;
             Debug.Log($"Cancelled: F={find} R={replace} E={entryFieldResult}");
             Close();
         }
