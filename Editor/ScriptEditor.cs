@@ -9,44 +9,40 @@ namespace pwnedu.ScriptEditor
 {
     public class ScriptEditor : EditorWindow
     {
+        #region Private Fields
+
         // Variables
         string referencePath = "Assets/Scripts/";
         readonly string defaultScript = "NewScript";
         readonly string extension = ".cs";
-        readonly string nl = Environment.NewLine; // This automatically selects "\r\n" for win "\n" for mac
+        readonly string nl = Environment.NewLine;
         string documentChanged;
-        string find;
-        string replace;
-        string renameFile;
-        string fileName;
         string fixedLineBreaks;
-        string codeText;
-        string revertText;
+        string find, replace;
+        string fileName, renameFile;
+        string codeText, revertText;
+
         int scriptId = 1;
+        bool popup = false;
 
         // Layouts
+        static Rect windowRect;
         static ScriptStyle styleData;
         Color headerColour = new Color32(60, 60, 180, 255);
         Color borderColour = new Color32(180, 120, 80, 255);
         Texture2D headerTexture;
         Texture2D borderTexture;
-        Rect headerSection;
-        Rect toolTip;
-        Rect buttonBar;
-        Rect saveIndicator;
-        static Rect windowRect;
-        Rect bodySection;
-        Rect footerSection;
-        //Rect highlightRect;
-        //TextEditor editor;
+        Rect headerSection, bodySection, footerSection;
+        Rect toolTip, buttonBar, saveIndicator;
+        GUIStyle horizontalLine;
+        GUIStyle editorStyle;
 
         Vector2 scrollPos;
-        GUIStyle horizontalLine;
-        GUIStyle style;
 
-        bool popup = false;
+        #endregion
 
-        [MenuItem("Tools/Script Editor/Open Editor %&e", priority = 2)] // Shortcut [Ctrl + Alt + E]
+        // Shortcut [Ctrl + Alt + E]
+        [MenuItem("Tools/Script Editor/Open Editor %&e", priority = 2)] 
         public static void ShowWindow()
         {
             GetWindow(typeof(ScriptEditor));
@@ -64,14 +60,18 @@ namespace pwnedu.ScriptEditor
             revertText = codeText;
         }
 
-        private void OnHierarchyChange() // Fix missing texture after leaving play mode.
+        private void OnHierarchyChange()
         {
             InitTextures();
             Repaint();
         }
 
+        //****************************************[ Initialise ]****************************************//
+
         public void InitTextures()
         {
+            #region Initiate Textures and Find Style Data
+
             FindStyleData();
 
             if (styleData != null)
@@ -87,13 +87,17 @@ namespace pwnedu.ScriptEditor
             borderTexture = new Texture2D(1, 1);
             borderTexture.SetPixel(0, 0, borderColour);
             borderTexture.Apply();
+
+            #endregion
         }
 
         public void SetStyle()
         {
+            #region Initiate Styles
+
             if (styleData == null)
             {
-                style = new GUIStyle()
+                editorStyle = new GUIStyle()
                 {
                     normal = new GUIStyleState() { textColor = new Color32(125, 150, 200, 255) },
                     fontStyle = FontStyle.Bold,
@@ -105,31 +109,30 @@ namespace pwnedu.ScriptEditor
             }
             else
             {
-                style = new GUIStyle(styleData.style.TextStyle);
+                editorStyle = new GUIStyle(styleData.style.TextStyle);
             }
 
             horizontalLine = new GUIStyle();
             horizontalLine.normal.background = EditorGUIUtility.whiteTexture;
             horizontalLine.margin = new RectOffset(0, 0, 4, 4);
             horizontalLine.fixedHeight = 1;
+
+            #endregion
         }
 
         private void OnGUI()
         {
+            #region Draw Script Editor Window
+
             DrawLayout();
             DrawHeader();
             DrawContent();
             DrawFooter();
+            DrawToolTip();
+            DrawSaveAndCloseButtons();
+            DrawSaveIndicator();
 
-            //if (popup && editor != null) 
-            //{
-            //    highlightRect = new Rect(editor.position);
-            //    highlightRect.width = 100;
-            //    highlightRect.height = 10;
-            //    GUILayout.BeginArea(highlightRect);
-            //    GUI.DrawTexture(highlightRect, borderTexture);
-            //    GUILayout.EndArea();
-            //}
+            #endregion
 
             #region Popup Window
 
@@ -148,6 +151,8 @@ namespace pwnedu.ScriptEditor
 
         private void DrawLayout()
         {
+            #region Draw Layouts
+
             headerSection.x = 0;
             headerSection.y = 0;
             headerSection.width = position.width;
@@ -156,7 +161,7 @@ namespace pwnedu.ScriptEditor
             toolTip = new Rect(headerSection.width - 197f, 1f, 10f, headerSection.height);
             saveIndicator = new Rect(headerSection.width - 68, headerSection.y + 0, 66f, headerSection.height);
             buttonBar = new Rect(headerSection.width - 186, 2f, 125f, headerSection.height);
-            windowRect = new Rect(buttonBar.x, headerSection.height, 150, 175);
+            windowRect = new Rect(buttonBar.x, headerSection.height, 150, 200);
 
             bodySection.x = headerSection.x;
             bodySection.y = headerSection.height;
@@ -167,29 +172,29 @@ namespace pwnedu.ScriptEditor
             footerSection.y = bodySection.height + headerSection.height;
             footerSection.width = bodySection.width;
             footerSection.height = 5;
+
+            #endregion
         }
 
         //****************************************[ DrawGUI ]****************************************//
 
         private void DrawHeader()
         {
-            #region Header
+            #region Draw Header
 
             GUILayout.BeginArea(headerSection);
             if (headerTexture != null) { GUI.DrawTexture(headerSection, headerTexture); }
             GUILayout.Space(4);
-            GUILayout.Label(" " + referencePath + fileName + extension, style); //, EditorStyles.boldLabel);
+            GUILayout.Label(" " + referencePath + fileName + extension, editorStyle); //, EditorStyles.boldLabel);
             GUILayout.EndArea();
            
-            DrawToolTip();
-            DrawSaveAndCloseButtons();
-            DrawSaveIndicator();
-
             #endregion
         }
 
         private void DrawToolTip()
         {
+            #region Draw Tooltip
+
             GUILayout.BeginArea(toolTip);
             GUILayout.Space(1);
             EditorGUILayout.LabelField(new GUIContent("?", "Basic Script Editor v1.0" + nl + nl +
@@ -197,11 +202,15 @@ namespace pwnedu.ScriptEditor
                 "Create a new script by opening the" + nl + "Script Editor without a script selected." + nl + nl +
                 "© BlitzKorp Pty Ltd " + DateTime.Now.Year));
             GUILayout.EndArea();
+
+            #endregion
         }
 
 
         private void DrawSaveAndCloseButtons()
         {
+            #region Draw Header Buttons
+
             GUILayout.BeginArea(buttonBar);
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("▼", GUILayout.Width(22), GUILayout.Height(16)))
@@ -228,19 +237,25 @@ namespace pwnedu.ScriptEditor
             }
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
+
+            #endregion
         }
 
         private void DrawSaveIndicator()
         {
+            #region Draw Save Indication Box
+
             GUILayout.BeginArea(saveIndicator);
             GUILayout.Space(1);
             GUILayout.Label(documentChanged, EditorStyles.helpBox);
             GUILayout.EndArea();
+
+            #endregion
         }
 
         private void DrawContent()
         {
-            #region Body
+            #region Draw Text Body
 
             if (borderTexture != null) { GUI.DrawTexture(bodySection, borderTexture); }
             GUILayout.BeginArea(bodySection);
@@ -273,7 +288,7 @@ namespace pwnedu.ScriptEditor
 
         private void DrawFooter()
         {
-            #region Footer
+            #region Draw Footer
 
             if (borderTexture != null) { GUI.DrawTexture(footerSection, borderTexture); }
             GUILayout.BeginArea(footerSection);
@@ -289,6 +304,11 @@ namespace pwnedu.ScriptEditor
 
             HorizontalLine(Color.grey);
             GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Find Text"))
+            {
+                FindTextButton();
+            }
+
             if (GUILayout.Button("Find & Replace"))
             {
                 FindAndReplaceButton();
@@ -330,17 +350,49 @@ namespace pwnedu.ScriptEditor
 
         //****************************************[ Popup Menu Buttons ]****************************************//
 
-        private void FindAndReplaceButton()
+        private void FindTextButton()
         {
+            #region Find Text Button Function
+
             popup = false;
 
             TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
-            if (editor.SelectedText != string.Empty)
+
+            if (!string.IsNullOrEmpty(editor.SelectedText))
             {
                 find = editor.SelectedText;
             }
 
-            var result = FindReplaceDialogue.ShowDialogueWindow("Find", find);
+            var result = FindReplaceDialogue.ShowDialogueWindow("Find Text", find, true);
+
+            find = result.Item1;
+
+            if (string.IsNullOrEmpty(find)) { Debug.Log("find is null"); return; }
+
+            Debug.Log($"Finding All Matches for {find} with {replace}.");
+
+            var indexes = FindPosition(find);
+
+            editor.selectIndex = indexes.Item1;
+            editor.cursorIndex = indexes.Item2;
+
+            #endregion
+        }
+
+        private void FindAndReplaceButton()
+        {
+            #region Find And Replace Text Button Function
+
+            popup = false;
+
+            TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+            
+            if (!string.IsNullOrEmpty(editor.SelectedText))
+            {
+                find = editor.SelectedText;
+            }
+
+            var result = FindReplaceDialogue.ShowDialogueWindow("Replace Text", find, false);
 
             find = result.Item1;
             replace = result.Item2;
@@ -354,10 +406,14 @@ namespace pwnedu.ScriptEditor
             find = "";
             replace = "";
             documentChanged = "not saved";
+
+            #endregion
         }
 
         private void ClearTextButton()
         {
+            #region Clear Text Button Function
+
             popup = false;
 
             if (EditorUtility.DisplayDialog("Clear Text", "This will clear all text in the editor." + nl + "Are you sure?", "Confirm", "Cancel"))
@@ -366,10 +422,14 @@ namespace pwnedu.ScriptEditor
                 documentChanged = "not saved";
                 Debug.Log("Text cleared!");
             }
+
+            #endregion
         }
 
         private void RevertTextButton()
         {
+            #region Revert Text Button Function
+
             popup = false;
 
             if (EditorUtility.DisplayDialog("Revert Text", "This will revert any changed text back to the original since the start of the session." + nl + "Are you sure?", "Confirm", "Cancel"))
@@ -377,10 +437,14 @@ namespace pwnedu.ScriptEditor
                 codeText = revertText;
                 Debug.Log("Text reverted back to original.");
             }
+
+            #endregion
         }
 
         private void RenameFileButton()
         {
+            #region Rename File Button Function
+
             popup = false;
 
             var save = SaveAsDialogue.ShowDialogueWindow("Rename File", renameFile);
@@ -420,10 +484,14 @@ namespace pwnedu.ScriptEditor
             {
                 Debug.Log($"Cancelled Rename");
             }
+
+            #endregion
         }
 
         private void SaveAsFileButton()
         {
+            #region Save As File Button Function
+
             popup = false;
 
             var save = SaveAsDialogue.ShowDialogueWindow("Save As", renameFile);
@@ -460,10 +528,14 @@ namespace pwnedu.ScriptEditor
             {
                 Debug.Log($"Cancelled SaveAs");
             }
+
+            #endregion
         }
 
         private void DeleteFileButton()
         {
+            #region Delete File Button Function
+
             popup = false;
 
             if (EditorUtility.DisplayDialog("Delete File", "This will permanently delete your script and clear text in the editor." + nl + "Are you sure?", "Confirm", "Cancel"))
@@ -474,12 +546,16 @@ namespace pwnedu.ScriptEditor
                 popup = false;
                 Debug.Log("File deleted.");
             }
+
+            #endregion
         }
 
         //****************************************[ Functions ]****************************************//
 
         private void OpenScript()
         {
+            #region Open Script Function
+
             referencePath = ScriptEditorUtility.GetSelectedPath();
             fileName = ScriptEditorUtility.GetSelectedFile();
 
@@ -513,10 +589,14 @@ namespace pwnedu.ScriptEditor
                     documentChanged = "not saved";
                 }
             }
+
+            #endregion
         }
 
         private void SaveScript()
         {
+            #region Save Script Function
+
             // Make sure line endings are fit for the environment. Finds all occurrence of \r\n or \n and replaces with nl
             fixedLineBreaks = Regex.Replace(codeText, @"\r\n?|\n", nl);
 
@@ -529,6 +609,16 @@ namespace pwnedu.ScriptEditor
             //AssetDatabase.Refresh(); // Update the reference in the editor.
             AssetDatabase.ImportAsset(referencePath + fileName + extension); // Or re-import the file might be faster.
             ScriptEditorUtility.SelectFile(referencePath + fileName + extension);
+
+            #endregion
+        }
+
+        private Tuple<int, int> FindPosition(string findPosition)
+        {
+            int start = codeText.IndexOf(findPosition);
+            int end = start + findPosition.Length;
+
+            return new Tuple<int,int>(start, end);
         }
 
         private void SaveAs()
@@ -544,6 +634,8 @@ namespace pwnedu.ScriptEditor
         {
             AssetDatabase.DeleteAsset(referencePath + file + extension);
         }
+
+        //****************************************[ Style ]****************************************//
 
         private void HorizontalLine(Color color)
         {
