@@ -14,17 +14,18 @@ namespace pwnedu.ScriptEditor
         readonly string defaultScript = "NewScript";
         readonly string extension = ".cs";
         readonly string nl = Environment.NewLine; // This automatically selects "\r\n" for win "\n" for mac
-        string documentChanged = "";
-        string find = "";
-        string replace = "";
-        string renameFile = "";
-        string fileName = "";
-        string codeText = "";
-        string fixedLineBreaks = "";
-        static int scriptId = 1;
+        string documentChanged;
+        string find;
+        string replace;
+        string renameFile;
+        string fileName;
+        string fixedLineBreaks;
+        string codeText;
+        string revertText;
+        int scriptId = 1;
 
         // Layouts
-        private static ScriptStyle styleData;
+        static ScriptStyle styleData;
         Color headerColour = new Color32(60, 60, 180, 255);
         Color borderColour = new Color32(180, 120, 80, 255);
         Texture2D headerTexture;
@@ -33,7 +34,7 @@ namespace pwnedu.ScriptEditor
         Rect toolTip;
         Rect buttonBar;
         Rect saveIndicator;
-        Rect windowRect;
+        static Rect windowRect;
         Rect bodySection;
         Rect footerSection;
         //Rect highlightRect;
@@ -44,9 +45,6 @@ namespace pwnedu.ScriptEditor
         GUIStyle style;
 
         bool popup = false;
-        bool showFind = false;
-        bool showRename = false;
-        bool showDelete = false;
 
         [MenuItem("Tools/Script Editor/Open Editor %&e", priority = 2)] // Shortcut [Ctrl + Alt + E]
         public static void ShowWindow()
@@ -63,6 +61,7 @@ namespace pwnedu.ScriptEditor
         {
             InitTextures();
             SetStyle();
+            revertText = codeText;
         }
 
         private void OnHierarchyChange() // Fix missing texture after leaving play mode.
@@ -157,7 +156,7 @@ namespace pwnedu.ScriptEditor
             toolTip = new Rect(headerSection.width - 197f, 1f, 10f, headerSection.height);
             saveIndicator = new Rect(headerSection.width - 68, headerSection.y + 0, 66f, headerSection.height);
             buttonBar = new Rect(headerSection.width - 186, 2f, 125f, headerSection.height);
-            windowRect = new Rect(buttonBar.x, headerSection.height, 150, 100);
+            windowRect = new Rect(buttonBar.x, headerSection.height, 150, 175);
 
             bodySection.x = headerSection.x;
             bodySection.y = headerSection.height;
@@ -170,6 +169,8 @@ namespace pwnedu.ScriptEditor
             footerSection.height = 5;
         }
 
+        //****************************************[ DrawGUI ]****************************************//
+
         private void DrawHeader()
         {
             #region Header
@@ -180,11 +181,61 @@ namespace pwnedu.ScriptEditor
             GUILayout.Label(" " + referencePath + fileName + extension, style); //, EditorStyles.boldLabel);
             GUILayout.EndArea();
            
-            ToolTip();
-            SaveAndCloseButtons();
-            SaveIndicator();
+            DrawToolTip();
+            DrawSaveAndCloseButtons();
+            DrawSaveIndicator();
 
             #endregion
+        }
+
+        private void DrawToolTip()
+        {
+            GUILayout.BeginArea(toolTip);
+            GUILayout.Space(1);
+            EditorGUILayout.LabelField(new GUIContent("?", "Basic Script Editor v1.0" + nl + nl +
+                "Select the file you would like to edit" + nl + "and press Ctrl + Alt + E or open the editor" + nl + "in Tools > Script Editor." + nl + nl +
+                "Create a new script by opening the" + nl + "Script Editor without a script selected." + nl + nl +
+                "© BlitzKorp Pty Ltd " + DateTime.Now.Year));
+            GUILayout.EndArea();
+        }
+
+
+        private void DrawSaveAndCloseButtons()
+        {
+            GUILayout.BeginArea(buttonBar);
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("▼", GUILayout.Width(22), GUILayout.Height(16)))
+            {
+                popup = !popup;
+            }
+
+            if (GUILayout.Button("Save", GUILayout.Width(44), GUILayout.Height(16)))
+            {
+                SaveScript();
+                documentChanged = "saved";
+            }
+
+            if (GUILayout.Button("Close", GUILayout.Width(44), GUILayout.Height(16)))
+            {
+                if (documentChanged == "not saved")
+                {
+                    if (EditorUtility.DisplayDialog("Close Script", "This will close the script without saving." + nl + "Are you sure?", "Confirm"))
+                    {
+                        this.Close();
+                    }
+                }
+                else { this.Close(); }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.EndArea();
+        }
+
+        private void DrawSaveIndicator()
+        {
+            GUILayout.BeginArea(saveIndicator);
+            GUILayout.Space(1);
+            GUILayout.Label(documentChanged, EditorStyles.helpBox);
+            GUILayout.EndArea();
         }
 
         private void DrawContent()
@@ -232,87 +283,200 @@ namespace pwnedu.ScriptEditor
             #endregion
         }
 
-        private void SubMenu()
-        {
-            // Display Sub Menu
-
-            //HorizontalLine(Color.grey);
-            GUILayout.Space(5);
-            GUILayout.BeginHorizontal();
-            
-            // Contextual Menus
-            GUILayout.BeginVertical();
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(10);
-            showRename = EditorGUILayout.Foldout(showRename, "Rename", true);
-            showFind = EditorGUILayout.Foldout(showFind, "Replace", true);
-            showDelete = EditorGUILayout.Foldout(showDelete, "Delete", true);
-            
-            GUILayout.EndHorizontal();
-            if (showFind || showRename || showDelete) { EditorGUILayout.Space(10); }
-            GUILayout.BeginHorizontal();
-            
-            // Rename Menu
-            if (showRename)
-            {
-                RenameAndSaveContent();
-            }
-            
-            // Find Menu
-            if (showFind)
-            {
-                FindAndRepalceContent();
-            }
-            
-            // Delete Menu
-            if (showDelete)
-            {
-                ClearAndDeleteButtons();
-            }
-            
-            GUILayout.EndHorizontal();
-            if (showFind || showRename || showDelete) 
-            {
-                EditorGUILayout.Space(10); 
-            }
-            GUILayout.EndVertical();
-
-            GUILayout.EndHorizontal();
-            EditorGUILayout.Space(2);
-        }
-
-        private void DrawPopupWindow(int unusedWindowID) 
+        private void DrawPopupWindow(int unusedWindowID)
         {
             #region Popup Window Layout
 
             HorizontalLine(Color.grey);
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Find"))
+            if (GUILayout.Button("Find & Replace"))
             {
-                TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
-                if (editor.SelectedText != string.Empty)
-                {
-                    find = editor.SelectedText;
-                }
-
-                find = ScriptEditorDialogue.ShowDialogueWindow("Find", find);
-                Debug.Log("Button A Works");
+                FindAndReplaceButton();
             }
+
+            if (GUILayout.Button("Clear Text"))
+            {
+                ClearTextButton();
+            }
+
+            if (GUILayout.Button("Revert Text"))
+            {
+                RevertTextButton();
+            }
+
+            GUILayout.FlexibleSpace();
+            HorizontalLine(Color.grey);
+            GUILayout.FlexibleSpace();
+
             if (GUILayout.Button("Rename"))
             {
-                ScriptEditorDialogue.ShowDialogueWindow("Rename", renameFile);
-                Debug.Log("Button B Works");
+                RenameFileButton();
             }
+
+            if (GUILayout.Button("Save As"))
+            {
+                SaveAsFileButton();
+            }
+
             if (GUILayout.Button("Delete"))
             {
-                ScriptEditorDialogue.TestFromMenu();
-                Debug.Log("Button C Works");
+                DeleteFileButton();
             }
             GUILayout.FlexibleSpace();
             GUI.DragWindow();
 
             #endregion
         }
+
+        //****************************************[ Popup Menu Buttons ]****************************************//
+
+        private void FindAndReplaceButton()
+        {
+            popup = false;
+
+            TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+            if (editor.SelectedText != string.Empty)
+            {
+                find = editor.SelectedText;
+            }
+
+            var result = FindReplaceDialogue.ShowDialogueWindow("Find", find);
+
+            find = result.Item1;
+            replace = result.Item2;
+
+            if (string.IsNullOrEmpty(find)) { Debug.Log("find is null"); return; }
+            if (string.IsNullOrEmpty(replace)) { Debug.Log("replace is null"); return; }
+
+            Debug.Log($"Replacing All Matches for {find} with {replace}.");
+
+            codeText = codeText.Replace(find, replace);
+            find = "";
+            replace = "";
+            documentChanged = "not saved";
+        }
+
+        private void ClearTextButton()
+        {
+            popup = false;
+
+            if (EditorUtility.DisplayDialog("Clear Text", "This will clear all text in the editor." + nl + "Are you sure?", "Confirm", "Cancel"))
+            {
+                codeText = "";
+                documentChanged = "not saved";
+                Debug.Log("Text cleared!");
+            }
+        }
+
+        private void RevertTextButton()
+        {
+            popup = false;
+
+            if (EditorUtility.DisplayDialog("Revert Text", "This will revert any changed text back to the original since the start of the session." + nl + "Are you sure?", "Confirm", "Cancel"))
+            {
+                codeText = revertText;
+                Debug.Log("Text reverted back to original.");
+            }
+        }
+
+        private void RenameFileButton()
+        {
+            popup = false;
+
+            var save = SaveAsDialogue.ShowDialogueWindow("Rename File", renameFile);
+            var oldFile = fileName;
+
+            if (save.Item2 != string.Empty)
+            {
+                renameFile = save.Item2;
+
+                switch (save.Item1)
+                {
+                    case 0:
+                        Debug.Log($"Cancelled Rename");
+                        break;
+                    case 1:
+                        // Rename File
+                        SaveAs();
+                        DeleteScript(oldFile);
+                        Debug.Log($"Rename File {renameFile}");
+                        break;
+                    // Rename File and Class
+                    case 2:
+                        codeText = new Regex(fileName).Replace(codeText, renameFile, 1); //Replace first occurrence only
+                        SaveAs();
+                        DeleteScript(oldFile);
+                        Debug.Log($"Rename File and Class {renameFile}");
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else if (save.Item1 != 0)
+            {
+                Debug.LogWarning("You need to set a file name before renaming your file!");
+            }
+            else
+            {
+                Debug.Log($"Cancelled Rename");
+            }
+        }
+
+        private void SaveAsFileButton()
+        {
+            popup = false;
+
+            var save = SaveAsDialogue.ShowDialogueWindow("Save As", renameFile);
+
+            if (save.Item2 != string.Empty)
+            {
+                renameFile = save.Item2;
+
+                switch (save.Item1)
+                {
+                    case 0:
+                        Debug.Log($"Cancelled SaveAs");
+                        break;
+                    case 1:
+                        // Save As New File
+                        SaveAs();
+                        Debug.Log($"Save As New File {renameFile}");
+                        break;
+                    // Save As New File and Rename Class
+                    case 2:
+                        codeText = new Regex(fileName).Replace(codeText, renameFile, 1); //Replace first occurrence only
+                        SaveAs();
+                        Debug.Log($"Save As New File and Rename Class {renameFile}");
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else if (save.Item1 != 0)
+            {
+                Debug.LogWarning("You need to set a file name before renaming your file!");
+            }
+            else
+            {
+                Debug.Log($"Cancelled SaveAs");
+            }
+        }
+
+        private void DeleteFileButton()
+        {
+            popup = false;
+
+            if (EditorUtility.DisplayDialog("Delete File", "This will permanently delete your script and clear text in the editor." + nl + "Are you sure?", "Confirm", "Cancel"))
+            {
+                DeleteScript(fileName);
+                codeText = string.Empty;
+                documentChanged = "not saved";
+                popup = false;
+                Debug.Log("File deleted.");
+            }
+        }
+
+        //****************************************[ Functions ]****************************************//
 
         private void OpenScript()
         {
@@ -362,8 +526,8 @@ namespace pwnedu.ScriptEditor
             writer.Write(fixedLineBreaks);
             writer.Close();
 
-            AssetDatabase.Refresh(); // Update the reference in the editor.
-                                     //AssetDatabase.ImportAsset(referencePath + fileName + extension); // Or re-import the file might be faster.
+            //AssetDatabase.Refresh(); // Update the reference in the editor.
+            AssetDatabase.ImportAsset(referencePath + fileName + extension); // Or re-import the file might be faster.
             ScriptEditorUtility.SelectFile(referencePath + fileName + extension);
         }
 
@@ -379,215 +543,6 @@ namespace pwnedu.ScriptEditor
         private void DeleteScript(string file)
         {
             AssetDatabase.DeleteAsset(referencePath + file + extension);
-        }
-
-        private void SaveAsOptions()
-        {
-            if (renameFile != "")
-            {
-                int options = EditorUtility.DisplayDialogComplex("Save As File Options", "How would you like to save the new file?", "Save As New File", "Cancel Save", "Save As New and Rename Class");
-
-                switch (options)
-                {
-                    // Save As New File
-                    case 0:
-                        SaveAs();
-                        break;
-                    // Cancel Save As New File
-                    case 1:
-                        break;
-                    // Save As New File and Rename Class
-                    case 2:
-                        codeText = new Regex(fileName).Replace(codeText, renameFile, 1); //Replace first occurrence only
-                        SaveAs();
-                        break;
-                    default:
-                        break;
-                }
-            }
-            else
-            {
-                Debug.LogWarning("You need to set a file name before creating a new file!");
-            }
-        }
-
-        private void RenameOptions()
-        {
-            if (renameFile != "")
-            {
-                int options = EditorUtility.DisplayDialogComplex("Rename File Options", "How would you like to rename the file?", "Rename File Only", "Cancel Rename", "Rename File and Class");
-                var oldFile = fileName;
-                switch (options)
-                {
-                    // Rename File Only
-                    case 0:
-                        SaveAs();
-                        DeleteScript(oldFile);
-                        break;
-                    // Cancel Rename File
-                    case 1:
-                        break;
-                    // Rename File and Class
-                    case 2:
-                        codeText = new Regex(fileName).Replace(codeText, renameFile, 1); //Replace first occurrence only
-                        SaveAs();
-                        DeleteScript(oldFile);
-                        break;
-                    default:
-                        break;
-                }
-            }
-            else
-            {
-                Debug.LogWarning("You need to set a file name before renaming your file!");
-            }
-        }
-
-        private void ToolTip()
-        {
-            GUILayout.BeginArea(toolTip);
-            GUILayout.Space(1);
-            EditorGUILayout.LabelField(new GUIContent("?", "Basic Script Editor v1.0" + nl + nl +
-                "Select the file you would like to edit" + nl + "and press Ctrl + Alt + E or open the editor" + nl + "in Tools > Script Editor." + nl + nl +
-                "Create a new script by opening the" + nl + "Script Editor without a script selected." + nl + nl +
-                "© BlitzKorp Pty Ltd " + DateTime.Now.Year));
-            GUILayout.EndArea();
-        }
-
-        private void SaveAndCloseButtons()
-        {
-            GUILayout.BeginArea(buttonBar);
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("▼", GUILayout.Width(22), GUILayout.Height(16)))
-            {
-                popup = !popup;
-            }
-
-            if (GUILayout.Button("Save", GUILayout.Width(44), GUILayout.Height(16)))
-            {
-                SaveScript();
-                documentChanged = "saved";
-            }
-
-            if (GUILayout.Button("Close", GUILayout.Width(44), GUILayout.Height(16)))
-            {
-                if (documentChanged == "not saved")
-                {
-                    if (EditorUtility.DisplayDialog("Close Script", "This will close the script without saving." + nl + "Are you sure?", "Confirm"))
-                    {
-                        this.Close();
-                    }
-                }
-                else { this.Close(); }
-            }
-            GUILayout.EndHorizontal();
-            GUILayout.EndArea();
-        }
-
-        private void SaveIndicator()
-        {
-            GUILayout.BeginArea(saveIndicator);
-            GUILayout.Space(1);
-            GUILayout.Label(documentChanged, EditorStyles.helpBox);
-            GUILayout.EndArea();
-        }
-
-        private void ClearAndDeleteButtons()
-        {
-            GUILayout.EndHorizontal();
-            if (showFind || showRename) 
-            { 
-                //EditorGUILayout.Space(5); 
-                //HorizontalLine(Color.grey); 
-                //EditorGUILayout.Space(5);
-            }
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Clear Text or Delete the File", EditorStyles.miniLabel);
-            GUILayout.EndHorizontal();
-
-            GUILayout.Space(5f);
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Clear", GUILayout.Width(80), GUILayout.Height(20)))
-            {
-                if (EditorUtility.DisplayDialog("Clear Text", "This will clear all text." + nl + "Are you sure?", "Confirm"))
-                {
-                    codeText = "";
-                    documentChanged = "not saved";
-                }
-            }
-            if (GUILayout.Button("Delete", GUILayout.Width(80), GUILayout.Height(20)))
-            {
-                if (EditorUtility.DisplayDialog("Delete Script", "This will permanently delete the script." + nl + "Are you sure?", "Confirm"))
-                {
-                    DeleteScript(fileName);
-                    this.Close();
-                }
-            }
-        }
-
-        private void FindAndRepalceContent()
-        {
-            GUILayout.EndHorizontal();
-            if (showRename) 
-            { 
-                //EditorGUILayout.Space(5); 
-                //HorizontalLine(Color.grey); 
-                //EditorGUILayout.Space(5); 
-            }
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(22);
-            GUILayout.Label("Find: ", EditorStyles.miniLabel);
-            find = EditorGUILayout.TextField(find);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(4f);
-            GUILayout.Label("Replace: ", EditorStyles.miniLabel);
-            replace = EditorGUILayout.TextField(replace);
-            GUILayout.EndHorizontal();
-
-            GUILayout.Space(5f);
-            GUILayout.BeginHorizontal();
-
-            if (GUILayout.Button("Replace All", GUILayout.Width(80), GUILayout.Height(20)))
-            {
-                if (find != "")
-                {
-                    if (EditorUtility.DisplayDialog("Find and Replace", "This will replace all instances of \'" + find + "\' with \'" + replace + "\'." + nl + "Are you sure?", "Confirm"))
-                    {
-                        string findAndReplace;
-                        findAndReplace = codeText.Replace(find, replace);
-                        codeText = findAndReplace;
-                        find = "";
-                        replace = "";
-                        documentChanged = "not saved";
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning("You need to set the \"Find\" field before renaming!");
-                }
-            }
-        }
-
-        private void RenameAndSaveContent()
-        {
-            GUILayout.Label("New File Name: ", EditorStyles.miniLabel);
-            renameFile = EditorGUILayout.TextField(renameFile);
-            GUILayout.EndHorizontal();
-            GUILayout.Space(5f);
-            GUILayout.BeginHorizontal();
-
-            if (GUILayout.Button("Rename", GUILayout.Width(80), GUILayout.Height(20)))
-            {
-                RenameOptions();
-            }
-            if (GUILayout.Button("Save As", GUILayout.Width(80), GUILayout.Height(20)))
-            {
-                SaveAsOptions();
-            }
         }
 
         private void HorizontalLine(Color color)
