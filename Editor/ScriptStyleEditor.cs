@@ -51,7 +51,7 @@ namespace pwnedu.ScriptEditor
             var previousColour = GUI.contentColor;
 
             // Scriptable Title
-            GUILayout.Label("Custom My Editor Styling", headerStyle);
+            GUILayout.Label("Custom Script Editor Styling", headerStyle);
             GUILayout.Label(target.name, EditorStyles.centeredGreyMiniLabel);
             GUILayout.Space(10);
 
@@ -59,7 +59,7 @@ namespace pwnedu.ScriptEditor
 
             // Area Heading
             GUI.contentColor = subHeadingColor;
-            EditorGUILayout.LabelField($"Custom Editor Style Data", EditorStyles.largeLabel);
+            EditorGUILayout.LabelField($"Custom Script Editor Style Data", EditorStyles.largeLabel);
             GUI.contentColor = previousColour;
             GUILayout.Space(5);
 
