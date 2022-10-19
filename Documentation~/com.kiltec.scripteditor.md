@@ -6,27 +6,27 @@ A simple script editor for making quick changes without leaving Unity.
 
 ### Dedicated Buttons
 
-*Find
-*Find Next
-*Find & Replace
-*Clear
-*Revert
-*Rename
-*Save
-*Save As
-*Quick Save
-*Delete
-*Safe Close
+* Find
+* Find Next
+* Find & Replace
+* Clear
+* Revert
+* Rename
+* Save
+* Save As
+* Quick Save
+* Delete
+* Safe Close
 
 ### Shortcuts Keys
 
-*Help(F1)
-*Quick Save (F2)
-*Quick Close (ESC)
-*Tab (TAB)
-*Settings (F12)
+* Help(F1)
+* Quick Save (F2)
+* Quick Close (ESC)
+* Tab (TAB)
+* Settings (F12)
 
 ### Known Issues
 
-*Cursor bugs out at 16422 characters.
+* Cursor bugs out at 16422 characters.
 
