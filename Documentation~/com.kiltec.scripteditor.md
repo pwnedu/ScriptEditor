@@ -24,6 +24,7 @@ A simple script editor for making quick changes without leaving Unity.
 *Quick Save (F2)
 *Quick Close (ESC)
 *Tab (TAB)
+*Settings (F12)
 
 ### Known Issues
 
