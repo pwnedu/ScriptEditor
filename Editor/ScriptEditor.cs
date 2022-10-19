@@ -4,7 +4,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace pwnedu.ScriptEditor
 {
@@ -27,7 +26,12 @@ namespace pwnedu.ScriptEditor
         string codeText, revertText;
 
         int scriptId = 1;
+        int numberOfLines = 1;
+        int findNextPos = 0;
+
         bool popup = false;
+        bool lineDisplay = true;
+        bool countDisplay = true;
         bool focus = true;
 
         // Layouts
@@ -35,12 +39,15 @@ namespace pwnedu.ScriptEditor
         static ScriptStyle styleData;
         Color headerColour = new Color32(60, 60, 180, 255);
         Color borderColour = new Color32(180, 120, 80, 255);
+        Color lineColour = Color.grey;
         Texture2D headerTexture;
         Texture2D borderTexture;
         Rect headerSection, bodySection, footerSection;
         Rect toolTip, buttonBar, saveIndicator;
         GUIStyle horizontalLine;
         GUIStyle editorStyle;
+        GUIStyle numStyle;
+        GUIStyle footerStyle;
 
         Vector2 scrollPos;
 
@@ -75,6 +82,7 @@ namespace pwnedu.ScriptEditor
         {
             InitTextures();
             SetStyle();
+            numberOfLines = codeText.Split(Environment.NewLine).Length;
             revertText = codeText;
             focus = true;
         }
@@ -111,16 +119,57 @@ namespace pwnedu.ScriptEditor
                 editorStyle = new GUIStyle()
                 {
                     normal = new GUIStyleState() { textColor = new Color32(125, 150, 200, 255) },
-                    fontStyle = FontStyle.Bold,
+                    border = new RectOffset(0, 0, 0, 0),
+                    padding = new RectOffset(4, 0, 0, 0),
                     alignment = TextAnchor.MiddleLeft,
+                    clipping = TextClipping.Clip,
+                    fontStyle = FontStyle.Bold,
                     fixedHeight = 20,
                     richText = true,
-                    fontSize = 14,
+                    fontSize = 14
+                };
+
+                numStyle = new GUIStyle(styleData.style.TextStyle)
+                {
+                    normal = new GUIStyleState() { textColor = Color.grey },
+                    border = new RectOffset(0, 0, 0, 0),
+                    padding = new RectOffset(0, 0, 0, 0),
+                    alignment = TextAnchor.MiddleRight,
+                    clipping = TextClipping.Clip,
+                    fontStyle = FontStyle.Normal,
+                    fixedHeight = EditorStyles.textArea.fixedHeight,
+                    richText = true,
+                    fontSize = 8
+                };
+
+                footerStyle = new GUIStyle()
+                {
+                    normal = new GUIStyleState() { textColor = Color.grey },
+                    border = new RectOffset(0, 0, 0, 0),
+                    padding = new RectOffset(0, 0, 0, 2),
+                    alignment = TextAnchor.MiddleLeft,
+                    clipping = TextClipping.Clip,
+                    fontStyle = FontStyle.Normal,
+                    fixedHeight = footerSection.height,
+                    richText = true,
+                    fontSize = 10
                 };
             }
             else
             {
                 editorStyle = new GUIStyle(styleData.style.TextStyle);
+                numStyle = new GUIStyle(styleData.style.NumberStyle)
+                {
+                    fixedHeight = EditorStyles.textArea.fixedHeight
+                };
+                footerStyle = new GUIStyle(styleData.style.FooterStyle)
+                {
+                    fixedHeight = footerSection.height
+                };
+
+                lineColour = styleData.style.lineColor;
+                lineDisplay = styleData.lineDisplay;
+                countDisplay = styleData.countDisplay;
             }
 
             horizontalLine = new GUIStyle();
@@ -192,6 +241,10 @@ namespace pwnedu.ScriptEditor
 
             #endregion
 
+            if (lineDisplay || countDisplay)
+            {
+                numberOfLines = codeText.Split('\n').Length;
+            }
         }
 
         private void DrawLayout()
@@ -216,7 +269,15 @@ namespace pwnedu.ScriptEditor
             footerSection.x = headerSection.x;
             footerSection.y = bodySection.height + headerSection.height;
             footerSection.width = bodySection.width;
-            footerSection.height = 5;
+            
+            if (countDisplay == false)
+            {
+                footerSection.height = 5;
+            }
+            else
+            {
+                footerSection.height = 15;
+            }
 
             #endregion
         }
@@ -306,20 +367,38 @@ namespace pwnedu.ScriptEditor
 
             EditorGUI.BeginChangeCheck();
 
+            GUILayout.BeginHorizontal();
+            if (lineDisplay)
+            {
+                GUILayout.BeginVertical();
+                var width = 12;
+                if (numberOfLines > 10) { width = 16; }
+                if (numberOfLines > 100) { width = 20; }
+                if (numberOfLines > 1000) { width = 24; }
+
+                for (int i = 1; i < numberOfLines + 1; i++)
+                {
+                    GUILayout.Label($"{i}", numStyle, GUILayout.Width(width), GUILayout.Height(styleData.style.TextStyle.lineHeight));
+                }
+                GUILayout.EndVertical();
+            }
+
             if (popup)
             {
-                GUILayout.Label(codeText, EditorStyles.textArea, GUILayout.MaxHeight(bodySection.height), GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                GUILayout.Label(codeText, EditorStyles.textArea, GUILayout.MaxWidth(bodySection.width), GUILayout.ExpandWidth(true), GUILayout.MaxHeight(bodySection.height), GUILayout.ExpandHeight(true));
             }
             else
             {
                 GUI.SetNextControlName("ScriptArea");
-                codeText = GUILayout.TextArea(codeText, GUILayout.MaxHeight(bodySection.height), GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                codeText = GUILayout.TextArea(codeText, GUILayout.MaxWidth(bodySection.width), GUILayout.ExpandWidth(true), GUILayout.MaxHeight(bodySection.height), GUILayout.ExpandHeight(true));
+
                 if (focus)
                 {
                     GUI.FocusControl("ScriptArea");
                     focus = false;
                 }
             }
+            GUILayout.EndHorizontal();
 
             if (EditorGUI.EndChangeCheck())
             {
@@ -338,6 +417,17 @@ namespace pwnedu.ScriptEditor
 
             if (borderTexture != null) { GUI.DrawTexture(footerSection, borderTexture); }
             GUILayout.BeginArea(footerSection);
+            
+            if (countDisplay)
+            {
+                GUILayout.BeginHorizontal();
+
+                GUILayout.FlexibleSpace();
+                GUILayout.Label($"Characters: {codeText.Length}", footerStyle, GUILayout.MaxHeight(bodySection.height), GUILayout.Width(110), GUILayout.ExpandHeight(true));
+                GUILayout.Label($"Lines: {numberOfLines}", footerStyle, GUILayout.MaxHeight(bodySection.height), GUILayout.Width(80), GUILayout.ExpandHeight(true));
+
+                GUILayout.EndHorizontal();
+            }
 
             GUILayout.EndArea();
 
@@ -348,9 +438,9 @@ namespace pwnedu.ScriptEditor
         {
             #region Popup Window Layout
 
-            HorizontalLine(Color.grey);
+            HorizontalLine(lineColour);
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Find Text"))
+            if (GUILayout.Button("Find"))
             {
                 FindTextButton();
             }
@@ -365,18 +455,18 @@ namespace pwnedu.ScriptEditor
                 FindAndReplaceButton();
             }
 
-            if (GUILayout.Button("Clear Text"))
+            if (GUILayout.Button("Clear"))
             {
                 ClearTextButton();
             }
 
-            if (GUILayout.Button("Revert Text"))
+            if (GUILayout.Button("Revert"))
             {
                 RevertTextButton();
             }
 
             GUILayout.FlexibleSpace();
-            HorizontalLine(Color.grey);
+            HorizontalLine(lineColour);
             GUILayout.FlexibleSpace();
 
             if (GUILayout.Button("Rename"))
@@ -437,8 +527,6 @@ namespace pwnedu.ScriptEditor
             #endregion
         }
 
-        int findNextPos;
-
         private void FindNextTextButton()
         {
             #region Find Text Button Function
@@ -446,6 +534,7 @@ namespace pwnedu.ScriptEditor
             popup = false;
 
             TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+            findNextPos = editor.cursorIndex;
 
             if (!string.IsNullOrEmpty(editor.SelectedText))
             {
@@ -462,11 +551,10 @@ namespace pwnedu.ScriptEditor
                 return; 
             }
 
-            findNextPos = editor.selectIndex; 
+            var indexes = ScriptEditorUtility.HighlightPositions(codeText, find, findNextPos);
+
             if (findNextPos >= codeText.Length) { findNextPos = 0; }
             if (findNextPos == editor.cursorIndex) { findNextPos = 0; } // editor cursor position maxes out at around 16,422 characters
-
-            var indexes = ScriptEditorUtility.HighlightPositions(codeText, find, findNextPos);
 
             editor.selectIndex = indexes.Item1;
             editor.cursorIndex = indexes.Item2;
@@ -710,7 +798,7 @@ namespace pwnedu.ScriptEditor
                 }
 
                 fileName = defaultScript + scriptId;
-                Debug.Log(fileName);
+                //Debug.Log(fileName);
                 while (File.Exists(referencePath + fileName + extension))
                 {
                     //Debug.Log("This file already exists: " + referencePath + fileName + extension); 
