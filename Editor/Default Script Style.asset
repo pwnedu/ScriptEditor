@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c5490679d62992479e0c15970e1c085, type: 3}
   m_Name: Default Script Style
   m_EditorClassIdentifier: 
+  lineDisplay: 1
+  countDisplay: 1
   style:
     backgroundColor: {r: 0.98039216, g: 0.7882353, b: 0.30980393, a: 1}
     randomBackgroundColor: 0
@@ -23,3 +25,13 @@ MonoBehaviour:
       rgba: 4294964674
     textAlignment: 0
     textStyle: 2
+    numberSize: 10
+    numberColor:
+      serializedVersion: 2
+      rgba: 4280643839
+    numberStyle: 0
+    footerSize: 6
+    footerColor:
+      serializedVersion: 2
+      rgba: 4294913891
+    footerStyle: 0
