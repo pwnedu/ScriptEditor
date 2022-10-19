@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace pwnedu.ScriptEditor
 {
@@ -27,6 +28,7 @@ namespace pwnedu.ScriptEditor
 
         int scriptId = 1;
         bool popup = false;
+        bool focus = true;
 
         // Layouts
         static Rect popupWindow;
@@ -39,6 +41,7 @@ namespace pwnedu.ScriptEditor
         Rect toolTip, buttonBar, saveIndicator;
         GUIStyle horizontalLine;
         GUIStyle editorStyle;
+        InputField mainInputField;
 
         Vector2 scrollPos;
 
@@ -66,14 +69,16 @@ namespace pwnedu.ScriptEditor
 
         private void Awake()
         {
-            OpenScript();
+            OpenOrCreateScript();
         }
 
         public void OnEnable()
         {
             InitTextures();
             SetStyle();
+            mainInputField.characterLimit = 500000;
             revertText = codeText;
+            focus = true;
         }
 
         public void InitTextures()
@@ -155,8 +160,8 @@ namespace pwnedu.ScriptEditor
                         Debug.Log("Quick Save");
                         break;
                     case KeyCode.F11:
-                        window.maximized = true;
-                        Debug.Log("Maximised");
+                        //window.maximized = true;
+                        //Debug.Log("Maximised");
                         break;
                 }
             }
@@ -203,7 +208,7 @@ namespace pwnedu.ScriptEditor
             toolTip = new Rect(headerSection.width - 197, headerSection.y, 10, headerSection.height);
             saveIndicator = new Rect(headerSection.width - 68, headerSection.y, 66, headerSection.height);
             buttonBar = new Rect(headerSection.width - 186, 1, 125, headerSection.height);
-            popupWindow = new Rect(buttonBar.x, headerSection.height, 150, 200);
+            popupWindow = new Rect(buttonBar.x, headerSection.height, 150, 225);
 
             bodySection.x = headerSection.x;
             bodySection.y = headerSection.height;
@@ -302,15 +307,22 @@ namespace pwnedu.ScriptEditor
             scrollPos = GUILayout.BeginScrollView(scrollPos);
 
             EditorGUI.BeginChangeCheck();
+
             if (popup)
             {
                 GUILayout.Label(codeText, EditorStyles.textArea, GUILayout.MaxHeight(bodySection.height), GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             }
             else
             {
+                GUI.SetNextControlName("ScriptArea");
                 codeText = GUILayout.TextArea(codeText, GUILayout.MaxHeight(bodySection.height), GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                if (focus)
+                {
+                    GUI.FocusControl("ScriptArea");
+                    focus = false;
+                }
             }
-            
+
             if (EditorGUI.EndChangeCheck())
             {
                 documentChanged = "not saved";
@@ -343,6 +355,11 @@ namespace pwnedu.ScriptEditor
             if (GUILayout.Button("Find Text"))
             {
                 FindTextButton();
+            }
+
+            if (GUILayout.Button("Find Next"))
+            {
+                FindNextTextButton();
             }
 
             if (GUILayout.Button("Find & Replace"))
@@ -403,19 +420,64 @@ namespace pwnedu.ScriptEditor
 
             find = result.Item2;
 
+            if (string.IsNullOrEmpty(find))
+            {
+                Debug.Log("find is null");
+                return;
+            }
+
+            var indexes = ScriptEditorUtility.HighlightPositions(codeText, find);
+
+            editor.selectIndex = indexes.Item1;
+            editor.cursorIndex = indexes.Item2;
+
+            Debug.Log($"Finding matches for {find}.");
+            Debug.Log($"Select From: {editor.selectIndex} Select To: {editor.cursorIndex}");
+
+            find = string.Empty;
+
+            #endregion
+        }
+
+        int findNextPos;
+
+        private void FindNextTextButton()
+        {
+            #region Find Text Button Function
+
+            popup = false;
+
+            TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+
+            if (!string.IsNullOrEmpty(editor.SelectedText))
+            {
+                find = editor.SelectedText;
+            }
+
+            var result = FindReplaceDialogue.ShowDialogueWindow("Find Next", find, true);
+
+            find = result.Item2;
+
             if (string.IsNullOrEmpty(find)) 
             { 
                 Debug.Log("find is null"); 
                 return; 
             }
 
-            Debug.Log($"Finding matches for {find}.");
+            findNextPos = editor.selectIndex; 
+            if (findNextPos >= codeText.Length) { findNextPos = 0; }
+            if (findNextPos == editor.cursorIndex) { findNextPos = 0; } // editor cursor position maxes out at around 16,422 characters
 
-            var indexes = FindPosition(find);
+            var indexes = ScriptEditorUtility.HighlightPositions(codeText, find, findNextPos);
 
             editor.selectIndex = indexes.Item1;
             editor.cursorIndex = indexes.Item2;
 
+            Debug.Log($"Finding matches for {find}.");
+            Debug.Log($"Select From: {editor.selectIndex} Select To: {editor.cursorIndex}");
+
+            //findNextPos = indexes.Item2;
+            
             find = string.Empty;
 
             #endregion
@@ -599,9 +661,9 @@ namespace pwnedu.ScriptEditor
             TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
             codeText = codeText.Insert(editor.selectIndex, "\t");
         }
-        private void OpenScript()
+        private void OpenOrCreateScript()
         {
-            #region Open Script Function
+            #region Check For Supported Filetype and Open or Create Script
 
             bool loadFile = false;
 
@@ -630,13 +692,27 @@ namespace pwnedu.ScriptEditor
                 }
                 catch (FileNotFoundException)
                 {
-                    // I don't think we will reach here anymore.
+                    // Now checking our extension prior, I don't think we will reach here anymore.
                     Debug.LogWarning("Incorrect file type. Script Editor only supports C# files, " + fileName + " is not a valid script file.");
                 }
             }
             else // Create new file.
             {
+                if (!referencePath.EndsWith("/"))
+                {
+                    if (Directory.Exists(referencePath))
+                    {
+                        referencePath += "/";
+                    }
+                    else //we have found a file without extension
+                    {
+                        int shorten = referencePath.LastIndexOf('/') + 1;
+                        referencePath = referencePath.Substring(0, shorten);
+                    }
+                }
+
                 fileName = defaultScript + scriptId;
+                Debug.Log(fileName);
                 while (File.Exists(referencePath + fileName + extension))
                 {
                     //Debug.Log("This file already exists: " + referencePath + fileName + extension); 
@@ -656,7 +732,7 @@ namespace pwnedu.ScriptEditor
 
         private void SaveScript()
         {
-            #region Save Script Function
+            #region Save Script and Focus Asset
 
             // Make sure line endings are fit for the environment. Finds all occurrence of \r\n or \n and replaces with nl
             fixedLineBreaks = Regex.Replace(codeText, @"\r\n?|\n", nl);
@@ -674,14 +750,6 @@ namespace pwnedu.ScriptEditor
             documentChanged = "saved";
 
             #endregion
-        }
-
-        private Tuple<int, int> FindPosition(string findPosition)
-        {
-            int start = codeText.IndexOf(findPosition);
-            int end = start + findPosition.Length;
-
-            return new Tuple<int,int>(start, end);
         }
 
         private void SaveAs()
