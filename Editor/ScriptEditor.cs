@@ -46,7 +46,7 @@ namespace pwnedu.ScriptEditor
         Rect toolTip, buttonBar, saveIndicator;
         GUIStyle horizontalLine;
         GUIStyle editorStyle;
-        GUIStyle numStyle;
+        GUIStyle numberStyle;
         GUIStyle footerStyle;
 
         Vector2 scrollPos;
@@ -114,6 +114,10 @@ namespace pwnedu.ScriptEditor
         {
             #region Initiate Styles
 
+            horizontalLine = new GUIStyle();
+            horizontalLine.normal.background = EditorGUIUtility.whiteTexture;
+            horizontalLine.margin = new RectOffset(0, 0, 4, 4);
+
             if (styleData == null)
             {
                 editorStyle = new GUIStyle()
@@ -129,7 +133,7 @@ namespace pwnedu.ScriptEditor
                     fontSize = 14
                 };
 
-                numStyle = new GUIStyle(styleData.style.TextStyle)
+                numberStyle = new GUIStyle(styleData.style.TextStyle)
                 {
                     normal = new GUIStyleState() { textColor = Color.grey },
                     border = new RectOffset(0, 0, 0, 0),
@@ -154,28 +158,28 @@ namespace pwnedu.ScriptEditor
                     richText = true,
                     fontSize = 10
                 };
+
+                horizontalLine.fixedHeight = 1;
             }
             else
             {
                 editorStyle = new GUIStyle(styleData.style.TextStyle);
-                numStyle = new GUIStyle(styleData.style.NumberStyle)
+
+                numberStyle = new GUIStyle(styleData.style.NumberStyle)
                 {
                     fixedHeight = EditorStyles.textArea.fixedHeight
                 };
+
                 footerStyle = new GUIStyle(styleData.style.FooterStyle)
                 {
                     fixedHeight = footerSection.height
                 };
 
+                horizontalLine.fixedHeight = styleData.style.lineHeight;
                 lineColour = styleData.style.lineColor;
                 lineDisplay = styleData.lineDisplay;
                 countDisplay = styleData.countDisplay;
             }
-
-            horizontalLine = new GUIStyle();
-            horizontalLine.normal.background = EditorGUIUtility.whiteTexture;
-            horizontalLine.margin = new RectOffset(0, 0, 4, 4);
-            horizontalLine.fixedHeight = 1;
 
             #endregion
         }
@@ -320,6 +324,15 @@ namespace pwnedu.ScriptEditor
             GUILayout.BeginArea(buttonBar);
             GUILayout.BeginHorizontal();
 
+            var previousBackgroundColor = GUI.backgroundColor;
+            var previousColor = GUI.contentColor;
+
+            if (styleData)
+            {
+                GUI.backgroundColor = styleData.style.menuButtonColor;
+                GUI.contentColor = styleData.style.menuButtonTextColor;
+            }
+
             if (GUILayout.Button("▼", EditorStyles.miniButton, GUILayout.Width(24), GUILayout.Height(16)))
             {
                 popup = !popup;
@@ -334,6 +347,9 @@ namespace pwnedu.ScriptEditor
             {
                 CloseWindow();
             }
+
+            GUI.backgroundColor = previousBackgroundColor;
+            GUI.contentColor = previousColor;
 
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
@@ -378,7 +394,7 @@ namespace pwnedu.ScriptEditor
 
                 for (int i = 1; i < numberOfLines + 1; i++)
                 {
-                    GUILayout.Label($"{i}", numStyle, GUILayout.Width(width), GUILayout.Height(styleData.style.TextStyle.lineHeight));
+                    GUILayout.Label($"{i}", numberStyle, GUILayout.Width(width), GUILayout.Height(styleData.style.TextStyle.lineHeight));
                 }
                 GUILayout.EndVertical();
             }
@@ -439,6 +455,16 @@ namespace pwnedu.ScriptEditor
             #region Popup Window Layout
 
             HorizontalLine(lineColour);
+
+            var previousBackgroundColor = GUI.backgroundColor;
+            var previousColor = GUI.contentColor;
+
+            if (styleData)
+            {
+                GUI.backgroundColor = styleData.style.dropdownButtonColor;
+                GUI.contentColor = styleData.style.dropdownButtonTextColor;
+            }
+
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Find"))
             {
@@ -485,6 +511,9 @@ namespace pwnedu.ScriptEditor
             }
             GUILayout.FlexibleSpace();
             GUI.DragWindow();
+
+            GUI.backgroundColor = previousBackgroundColor;
+            GUI.contentColor = previousColor;
 
             #endregion
         }
@@ -886,10 +915,10 @@ namespace pwnedu.ScriptEditor
 
         private void HorizontalLine(Color color)
         {
-            var c = GUI.color;
-            GUI.color = color;
+            var c = GUI.backgroundColor;
+            GUI.backgroundColor = color;
             GUILayout.Box(GUIContent.none, horizontalLine);
-            GUI.color = c;
+            GUI.backgroundColor = c;
         }
 
         private static void FindStyleData()
