@@ -4,6 +4,12 @@ A simple script editor for making quick changes without leaving Unity.
 
 ## Features
 
+* Save Indicator
+* Line Counter
+* Character Counter
+* Customisable Layout
+* Customisable Themes
+
 ### Dedicated Buttons
 
 * Find
