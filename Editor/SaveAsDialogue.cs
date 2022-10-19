@@ -6,13 +6,18 @@ namespace pwnedu.ScriptEditor
 {
     public class SaveAsDialogue : EditorWindow
     {
+        #region Private Fields
+
         string windowName;
+        string extension;
         string saveAs;
         string entryFieldResult;
         int resultOption;
         Tuple<int, string> result;
 
-        public static Tuple<int, string> ShowDialogueWindow(string windowName, string saveAs) 
+        #endregion
+
+        public static Tuple<int, string> ShowDialogueWindow(string windowName, string extension, string saveAs) 
         {
             #region Create Dialogue Window
 
@@ -23,6 +28,7 @@ namespace pwnedu.ScriptEditor
             dialog.maxSize = new Vector2(320, 120);
 
             dialog.windowName = windowName;
+            dialog.extension = extension;
             dialog.saveAs = saveAs;
             dialog.entryFieldResult = dialog.saveAs;
             dialog.result = new Tuple<int, string>(dialog.resultOption, dialog.saveAs);
@@ -42,8 +48,8 @@ namespace pwnedu.ScriptEditor
             GUILayout.BeginHorizontal();
             GUILayout.Space(20);
             EditorGUILayout.LabelField($"{windowName}:", GUILayout.Width(75));
-            entryFieldResult = EditorGUILayout.TextField(entryFieldResult, GUILayout.Width(180));
-            EditorGUILayout.LabelField(".cs", GUILayout.Width(20));
+            entryFieldResult = EditorGUILayout.TextField(entryFieldResult, GUILayout.Width(175));
+            EditorGUILayout.LabelField(extension, GUILayout.Width(40));
             GUILayout.EndHorizontal();
 
             GUILayout.FlexibleSpace();
@@ -75,30 +81,42 @@ namespace pwnedu.ScriptEditor
 
         private void Cancelled()
         {
+            #region Cancel
+
             entryFieldResult = saveAs;
             result = new Tuple<int, string>(0, entryFieldResult);
             Debug.Log($"Cancelled: S={saveAs} E={entryFieldResult}");
             Close();
+
+            #endregion
         }
 
         private void SaveAs()
         {
+            #region Save File Ónly
+
             if (!string.IsNullOrEmpty(entryFieldResult))
             {
                 result = new Tuple<int, string>(1, entryFieldResult);
                 Debug.Log($"SaveAs: S={saveAs} E={entryFieldResult}");
                 Close();
             }
+
+            #endregion
         }
 
         private void SaveAsAndRenameClass()
         {
+            #region Save File And Rename Class
+
             if (!string.IsNullOrEmpty(entryFieldResult))
             {
                 result = new Tuple<int, string>(2, entryFieldResult);
                 Debug.Log($"RenameClass: S={saveAs} E={entryFieldResult}");
                 Close();
             }
+
+            #endregion
         }
     }
 }
