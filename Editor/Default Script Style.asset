@@ -28,10 +28,26 @@ MonoBehaviour:
     numberSize: 10
     numberColor:
       serializedVersion: 2
-      rgba: 4280643839
+      rgba: 4278200177
     numberStyle: 0
-    footerSize: 6
+    footerSize: 12
     footerColor:
       serializedVersion: 2
       rgba: 4294913891
     footerStyle: 0
+    menuButtonColor:
+      serializedVersion: 2
+      rgba: 4294940301
+    menuButtonTextColor:
+      serializedVersion: 2
+      rgba: 4294637540
+    lineColor:
+      serializedVersion: 2
+      rgba: 4282807781
+    lineHeight: 2
+    dropdownButtonColor:
+      serializedVersion: 2
+      rgba: 4294705025
+    dropdownButtonTextColor:
+      serializedVersion: 2
+      rgba: 4294637540
