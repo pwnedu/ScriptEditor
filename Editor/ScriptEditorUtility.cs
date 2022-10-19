@@ -21,6 +21,7 @@ namespace pwnedu.ScriptEditor
                 path = path.Replace(Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
             }
 
+            //Debug.Log(path);
             return path;
         }
 
@@ -41,6 +42,16 @@ namespace pwnedu.ScriptEditor
                 file = Path.GetFileName(obj.name);
                 return file;
             }
+        }
+        
+        public static string GetExtension(string referencePath, string fileName)
+        {
+            var path = Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject));
+            var file = path.Replace(referencePath + fileName, "");
+            var extension = file.Replace(fileName, "");
+            //Debug.Log(extension);
+
+            return extension;
         }
 
         public static void SelectFile(string filePath)
