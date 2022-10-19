@@ -607,8 +607,7 @@ namespace pwnedu.ScriptEditor
             editor.selectIndex = indexes.Item1;
             editor.cursorIndex = indexes.Item2;
 
-            Debug.Log($"Finding matches for {find}.");
-            Debug.Log($"Select From: {editor.selectIndex} Select To: {editor.cursorIndex}");
+            Debug.Log($"Finding matches for {find}.\nSelect From: {editor.selectIndex} Select To: {editor.cursorIndex}");
 
             find = string.Empty;
 
@@ -641,17 +640,11 @@ namespace pwnedu.ScriptEditor
 
             var indexes = ScriptEditorUtility.HighlightPositions(codeText, find, findNextPos);
 
-            if (findNextPos >= codeText.Length) { findNextPos = 0; }
-            if (findNextPos == editor.cursorIndex) { findNextPos = 0; } // editor cursor position maxes out at around 16,422 characters
-
             editor.selectIndex = indexes.Item1;
             editor.cursorIndex = indexes.Item2;
 
-            Debug.Log($"Finding matches for {find}.");
-            Debug.Log($"Select From: {editor.selectIndex} Select To: {editor.cursorIndex}");
+            Debug.Log($"Finding matches for {find}.\nSelect From: {editor.selectIndex} Select To: {editor.cursorIndex}");
 
-            //findNextPos = indexes.Item2;
-            
             find = string.Empty;
 
             #endregion
