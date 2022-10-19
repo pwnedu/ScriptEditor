@@ -32,7 +32,7 @@ A simple script editor for making quick changes without leaving Unity.
 * Tab (TAB)
 * Settings (F12)
 
-#### Known Issues
+### Known Issues
 
 * Cursor bugs out at 16422 characters.
 
