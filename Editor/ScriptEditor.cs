@@ -11,21 +11,25 @@ namespace pwnedu.ScriptEditor
     {
         #region Private Fields
 
-        static EditorWindow window;
+        static EditorWindow editorWindow;
+        static Rect popupWindow;
+        static ScriptStyle styleData;
 
-        // Variables
         const string toolPath = "Packages/com.kiltec.scripteditor/";
         const string menuItem = "Tools/Script Editor/";
-        string referencePath = "Assets/Scripts/";
-        readonly string defaultScript = "NewScript";
+
         readonly string[] allowedExtensions = new string[6] { ".cs", ".csv", ".json", ".xml", ".txt", ".md" };
+        readonly string defaultScript = "NewScript";
         readonly string nl = Environment.NewLine;
-        string extension = ".cs";
+
+        // Variables
+        string referencePath = "Assets/Scripts/";
         string documentChanged;
         string fixedLineBreaks;
         string find, replace;
         string fileName, renameFile;
         string codeText, revertText;
+        string extension = ".cs";
 
         int scriptId = 1;
         int numberOfLines = 1;
@@ -37,8 +41,6 @@ namespace pwnedu.ScriptEditor
         bool focus = true;
 
         // Layouts
-        static Rect popupWindow;
-        static ScriptStyle styleData;
         Color headerColour = new Color32(60, 60, 180, 255);
         Color borderColour = new Color32(180, 120, 80, 255);
         Color lineColour = Color.grey;
@@ -61,10 +63,12 @@ namespace pwnedu.ScriptEditor
         [MenuItem(menuItem + "Open Editor %&e", priority = 2)] 
         public static void ShowWindow()
         {
-            window = GetWindow(typeof(ScriptEditor));
+            editorWindow = GetWindow(typeof(ScriptEditor));
             var res = Screen.currentResolution;
-            window.maxSize = new Vector2(res.width, res.height);
-            window.minSize = new Vector2(360, 240);
+            var content = new GUIContent("Script Editor");
+            editorWindow.titleContent = content;
+            editorWindow.maxSize = new Vector2(res.width, res.height);
+            editorWindow.minSize = new Vector2(360, 240);
         }
 
         [MenuItem(menuItem + "Script Editor Settings", priority = 11)]
@@ -341,10 +345,8 @@ namespace pwnedu.ScriptEditor
 
             GUILayout.BeginArea(toolTip);
             GUILayout.Space(1);
-            EditorGUILayout.LabelField(new GUIContent("?", "Basic Script Editor v1.0" + nl + nl +
-                "Select the file you would like to edit" + nl + "and press Ctrl + Alt + E or open the editor" + nl + "in Tools > Script Editor." + nl + nl +
-                "Create a new script by opening the" + nl + "Script Editor without a script selected." + nl + nl +
-                "© BlitzKorp Pty Ltd " + DateTime.Now.Year));
+            var tip = $"Script Editor by pwnedu\n\n(Ctrl + Alt + E)\t Open Editor\t{nl}(F1)\t\t Help{nl}(F2)\t\t Save{nl}(F12)\t\t Settings{nl}(ESC)\t\t Quit\n\n© BlitzKorp Pty Ltd {DateTime.Now.Year}";
+            EditorGUILayout.LabelField(new GUIContent("?", tip));
             GUILayout.EndArea();
 
             #endregion
