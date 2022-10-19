@@ -41,7 +41,6 @@ namespace pwnedu.ScriptEditor
         Rect toolTip, buttonBar, saveIndicator;
         GUIStyle horizontalLine;
         GUIStyle editorStyle;
-        InputField mainInputField;
 
         Vector2 scrollPos;
 
@@ -76,7 +75,6 @@ namespace pwnedu.ScriptEditor
         {
             InitTextures();
             SetStyle();
-            mainInputField.characterLimit = 500000;
             revertText = codeText;
             focus = true;
         }
