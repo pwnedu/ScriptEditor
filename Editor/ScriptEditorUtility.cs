@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -59,6 +60,25 @@ namespace pwnedu.ScriptEditor
             EditorUtility.FocusProjectWindow();
             UnityEngine.Object obj = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(filePath);
             Selection.activeObject = obj;
+        }
+
+        public static Tuple<int, int> HighlightPositions(string findIn, string findMatch)
+        {
+            int start = findIn.IndexOf(findMatch);
+            int end = start + findMatch.Length;
+
+            return new Tuple<int, int>(start, end);
+        }
+
+        public static Tuple<int, int> HighlightPositions(string findIn, string findMatch, int lastPositionEnd)
+        {
+            string textSplit = findIn.Substring(lastPositionEnd);
+            int next = textSplit.IndexOf(findMatch);
+
+            int start = next + lastPositionEnd;
+            int end = start + findMatch.Length;
+
+            return new Tuple<int, int>(start, end);
         }
     }
 }
