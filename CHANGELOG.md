@@ -4,13 +4,13 @@
 
 0.0.4 Added features
 
-*character count
+*character and line count
 *line display
 *find next
 *additional customisation
 *tab functionality
-*quick save
-*quick exit
+*quick save and exit
+*menu shortcuts
 
 ---
 
