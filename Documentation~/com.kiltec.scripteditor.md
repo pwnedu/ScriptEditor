@@ -4,6 +4,7 @@ A simple script editor for making quick changes without leaving Unity.
 
 ### Features
 
+* Script Indicator
 * Save Indicator
 * Line Counter
 * Character Counter
@@ -27,6 +28,7 @@ A simple script editor for making quick changes without leaving Unity.
 ### Shortcuts Keys
 
 * Help(F1)
+* Quick Open (Ctrl + Alt + E)
 * Quick Save (F2)
 * Quick Close (ESC)
 * Tab (TAB)
