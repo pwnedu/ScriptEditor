@@ -80,14 +80,14 @@ namespace pwnedu.ScriptEditor
             fontSize = footerSize
         };
 
-        [Header("Horizontal Bar Style")]
+        [Header("Menu Bar Style")]
+        [Tooltip("Increase the alpha channel to see the text.")] public Color32 menuButtonColor;
+        [Tooltip("Increase the alpha channel to see the text.")] public Color32 menuButtonTextColor;
+
+        [Header("Dropdown Menu Style")]
         [Tooltip("Increase the alpha channel to see the text.")] public Color32 lineColor;
-        //GUIStyle HorizontalLine = new GUIStyle()
-        //{
-        //    HorizontalLine = new GUIStyle();
-        //    HorizontalLine.normal.background = EditorGUIUtility.whiteTexture;
-        //    HorizontalLine.margin = new RectOffset(0, 0, 4, 4);
-        //    HorizontalLine.fixedHeight = 1;
-        //};
+        [Range(0,10)] public int lineHeight;
+        [Tooltip("Increase the alpha channel to see the text.")] public Color32 dropdownButtonColor;
+        [Tooltip("Increase the alpha channel to see the text.")] public Color32 dropdownButtonTextColor;
     }
 }
