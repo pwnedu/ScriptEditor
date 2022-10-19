@@ -420,7 +420,6 @@ namespace pwnedu.ScriptEditor
             EditorGUI.BeginChangeCheck();
 
             GUILayout.BeginHorizontal();
-
             if (lineDisplay)
             {
                 GUILayout.BeginVertical();
@@ -436,7 +435,7 @@ namespace pwnedu.ScriptEditor
                 }
                 GUILayout.EndVertical();
             }
-
+            GUILayout.BeginVertical();
             if (popup)
             {
                 GUILayout.Label(codeText, EditorStyles.textArea, GUILayout.MaxWidth(bodySection.width), GUILayout.ExpandWidth(true), GUILayout.MaxHeight(bodySection.height), GUILayout.ExpandHeight(true));
@@ -444,6 +443,7 @@ namespace pwnedu.ScriptEditor
             else
             {
                 GUI.SetNextControlName("ScriptArea");
+
                 codeText = GUILayout.TextArea(codeText, GUILayout.MaxWidth(bodySection.width), GUILayout.ExpandWidth(true), GUILayout.MaxHeight(bodySection.height), GUILayout.ExpandHeight(true));
 
                 if (focus)
@@ -452,6 +452,8 @@ namespace pwnedu.ScriptEditor
                     focus = false;
                 }
             }
+            GUILayout.Space(5);
+            GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
             if (EditorGUI.EndChangeCheck())
