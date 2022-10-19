@@ -1,6 +1,6 @@
 {
   "name": "com.kiltec.scripteditor",
-  "version": "0.0.1",
+  "version": "0.0.3-preview.1",
   "displayName": "Script Editor by pwnedu",
   "description": "A simplistic script editor for Unity",
   "unity": "2018.1",
