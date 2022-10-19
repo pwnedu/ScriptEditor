@@ -6,11 +6,15 @@ namespace pwnedu.ScriptEditor
 {
     public class FindReplaceDialogue : EditorWindow
     {
-        bool findOnly;
-        string windowName;
-        string find;
+        #region Private Fields
+
         readonly string replace;
+        string find;
+        string windowName;
         string entryFieldResult;
+        bool findOnly;
+
+        #endregion
 
         public static Tuple<string, string> ShowDialogueWindow(string windowName, string find, bool findOnly)
         {
@@ -88,18 +92,35 @@ namespace pwnedu.ScriptEditor
 
         private void Accepted()
         {
+            #region Accept
+
+            if (findOnly && !string.IsNullOrEmpty(find))
+            {
+                entryFieldResult = find;
+            }
+            else if (!string.IsNullOrEmpty(replace))
+            {
+                entryFieldResult = replace;
+            }
+
             if (!string.IsNullOrEmpty(entryFieldResult))
             {
                 Debug.Log($"Accepted: F={find} R={replace} E={entryFieldResult}");
                 Close();
             }
+
+            #endregion
         }
 
         private void Cancelled()
         {
+            #region Cancel
+
             entryFieldResult = string.Empty;
             Debug.Log($"Cancelled: F={find} R={replace} E={entryFieldResult}");
             Close();
+
+            #endregion
         }
     }
 }
