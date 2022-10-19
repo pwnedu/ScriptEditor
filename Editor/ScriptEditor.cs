@@ -72,7 +72,7 @@ namespace pwnedu.ScriptEditor
         }
 
         [MenuItem(menuItem + "Script Editor Settings", priority = 11)]
-        private static void AttributeSettings()
+        private static void ScriptEditorSettings()
         {
             var path = $"{toolPath}Editor/Default Script Style.asset";
 
@@ -253,7 +253,7 @@ namespace pwnedu.ScriptEditor
                         //Debug.Log("Maximised");
                         break;
                     case KeyCode.F12:
-                        AttributeSettings();
+                        ScriptEditorSettings();
                         //Debug.Log("Settings");
                         break;
                 }
@@ -301,7 +301,7 @@ namespace pwnedu.ScriptEditor
             toolTip = new Rect(headerSection.width - 197, headerSection.y, 10, headerSection.height);
             saveIndicator = new Rect(headerSection.width - 68, headerSection.y, 66, headerSection.height);
             buttonBar = new Rect(headerSection.width - 186, 1, 125, headerSection.height);
-            popupWindow = new Rect(buttonBar.x, headerSection.height, 150, 225);
+            popupWindow = new Rect(buttonBar.x, headerSection.height, 150, 300);
 
             bodySection.x = headerSection.x;
             bodySection.y = headerSection.height;
@@ -416,6 +416,7 @@ namespace pwnedu.ScriptEditor
             GUILayout.Space(space);
 
             scrollPos = GUILayout.BeginScrollView(scrollPos);
+            bool scroll = scrollPos.magnitude > 0;
 
             EditorGUI.BeginChangeCheck();
 
@@ -452,7 +453,10 @@ namespace pwnedu.ScriptEditor
                     focus = false;
                 }
             }
-            GUILayout.Space(5);
+            
+            if (scroll) { GUILayout.Space(5); }
+            else { GUILayout.Space(-2); }
+
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
 
@@ -549,6 +553,21 @@ namespace pwnedu.ScriptEditor
             {
                 DeleteFileButton();
             }
+
+            GUILayout.FlexibleSpace();
+            HorizontalLine(lineColour);
+            GUILayout.FlexibleSpace();
+
+            if (GUILayout.Button("Settings"))
+            {
+                ScriptEditorSettings();
+            }
+
+            if (GUILayout.Button("Help"))
+            {
+                ScriptEditorHelp();
+            }
+
             GUILayout.FlexibleSpace();
             GUI.DragWindow();
 
