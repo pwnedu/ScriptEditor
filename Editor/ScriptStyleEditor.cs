@@ -10,6 +10,8 @@ namespace pwnedu.ScriptEditor
         private SerializedObject styleController;
 
         // Extensions
+        private SerializedProperty lineProperty;
+        private SerializedProperty countProperty;
         private SerializedProperty styleProperty;
 
         // Editor Properties
@@ -24,6 +26,8 @@ namespace pwnedu.ScriptEditor
             styleController = new SerializedObject(target);
 
             // Find Property
+            lineProperty = styleController.FindProperty("lineDisplay");
+            countProperty = styleController.FindProperty("countDisplay");
             styleProperty = styleController.FindProperty("style");
 
             // Creaete Header GUI Style
@@ -56,6 +60,19 @@ namespace pwnedu.ScriptEditor
             GUILayout.Space(10);
 
             EditorGUI.BeginChangeCheck();
+
+            // Area Heading
+            GUI.contentColor = subHeadingColor;
+            EditorGUILayout.LabelField($"Custom Script Editor Style Data", EditorStyles.largeLabel);
+            GUI.contentColor = previousColour;
+            GUILayout.Space(5);
+
+            //Viewing Options
+            EditorGUILayout.BeginVertical("Box");
+            EditorGUILayout.PropertyField(lineProperty);
+            EditorGUILayout.PropertyField(countProperty);
+            EditorGUILayout.EndVertical();
+            GUILayout.Space(5);
 
             // Area Heading
             GUI.contentColor = subHeadingColor;
