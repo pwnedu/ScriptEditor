@@ -11,11 +11,14 @@ namespace pwnedu.ScriptEditor
     {
         #region Private Fields
 
+        static EditorWindow window;
+
         // Variables
         string referencePath = "Assets/Scripts/";
         readonly string defaultScript = "NewScript";
-        readonly string extension = ".cs";
+        readonly string[] allowedExtensions = new string[6] { ".cs", ".csv", ".json", ".xml", ".txt", ".md" };
         readonly string nl = Environment.NewLine;
+        string extension = ".cs";
         string documentChanged;
         string fixedLineBreaks;
         string find, replace;
@@ -26,7 +29,7 @@ namespace pwnedu.ScriptEditor
         bool popup = false;
 
         // Layouts
-        static Rect windowRect;
+        static Rect popupWindow;
         static ScriptStyle styleData;
         Color headerColour = new Color32(60, 60, 180, 255);
         Color borderColour = new Color32(180, 120, 80, 255);
@@ -41,12 +44,25 @@ namespace pwnedu.ScriptEditor
 
         #endregion
 
+        //****************************************[ Create Window ]****************************************//
+
         // Shortcut [Ctrl + Alt + E]
         [MenuItem("Tools/Script Editor/Open Editor %&e", priority = 2)] 
         public static void ShowWindow()
         {
-            GetWindow(typeof(ScriptEditor));
+            window = GetWindow(typeof(ScriptEditor));
+            var res = Screen.currentResolution;
+            window.maxSize = new Vector2(res.width, res.height);
+            window.minSize = new Vector2(360, 240);
         }
+
+        private void OnHierarchyChange()
+        {
+            InitTextures();
+            Repaint();
+        }
+
+        //****************************************[ Initialise ]****************************************//
 
         private void Awake()
         {
@@ -59,14 +75,6 @@ namespace pwnedu.ScriptEditor
             SetStyle();
             revertText = codeText;
         }
-
-        private void OnHierarchyChange()
-        {
-            InitTextures();
-            Repaint();
-        }
-
-        //****************************************[ Initialise ]****************************************//
 
         public void InitTextures()
         {
@@ -122,6 +130,39 @@ namespace pwnedu.ScriptEditor
 
         private void OnGUI()
         {
+            #region Keyboard Input
+
+            // Check first if key has been pressed
+            var e = Event.current;
+
+            if (e.type == EventType.KeyDown)
+            {
+                //Debug.Log(e.keyCode);
+
+                switch (e.keyCode)
+                {
+                    case KeyCode.Escape:
+                        CloseWindow();
+                        break;
+                    case KeyCode.Tab:
+                        TabSpace();
+                        break;
+                    case KeyCode.F1:
+                        Debug.Log("Show Help");
+                        break;
+                    case KeyCode.F2:
+                        SaveScript();
+                        Debug.Log("Quick Save");
+                        break;
+                    case KeyCode.F11:
+                        window.maximized = true;
+                        Debug.Log("Maximised");
+                        break;
+                }
+            }
+
+            #endregion
+
             #region Draw Script Editor Window
 
             DrawLayout();
@@ -129,7 +170,7 @@ namespace pwnedu.ScriptEditor
             DrawContent();
             DrawFooter();
             DrawToolTip();
-            DrawSaveAndCloseButtons();
+            DrawButtonBar();
             DrawSaveIndicator();
 
             #endregion
@@ -141,12 +182,13 @@ namespace pwnedu.ScriptEditor
                 BeginWindows();
 
                 // All Popup Windows must come inside here.
-                windowRect = GUILayout.Window(1, windowRect, DrawPopupWindow, "Options Menu");
+                popupWindow = GUILayout.Window(1, popupWindow, DrawPopupWindow, "Options Menu");
 
                 EndWindows();
             }
 
             #endregion
+
         }
 
         private void DrawLayout()
@@ -158,10 +200,10 @@ namespace pwnedu.ScriptEditor
             headerSection.width = position.width;
             headerSection.height = 20;
 
-            toolTip = new Rect(headerSection.width - 197f, 1f, 10f, headerSection.height);
-            saveIndicator = new Rect(headerSection.width - 68, headerSection.y + 0, 66f, headerSection.height);
-            buttonBar = new Rect(headerSection.width - 186, 2f, 125f, headerSection.height);
-            windowRect = new Rect(buttonBar.x, headerSection.height, 150, 200);
+            toolTip = new Rect(headerSection.width - 197, headerSection.y, 10, headerSection.height);
+            saveIndicator = new Rect(headerSection.width - 68, headerSection.y, 66, headerSection.height);
+            buttonBar = new Rect(headerSection.width - 186, 1, 125, headerSection.height);
+            popupWindow = new Rect(buttonBar.x, headerSection.height, 150, 200);
 
             bodySection.x = headerSection.x;
             bodySection.y = headerSection.height;
@@ -176,7 +218,7 @@ namespace pwnedu.ScriptEditor
             #endregion
         }
 
-        //****************************************[ DrawGUI ]****************************************//
+        //****************************************[ Draw GUI ]****************************************//
 
         private void DrawHeader()
         {
@@ -207,34 +249,28 @@ namespace pwnedu.ScriptEditor
         }
 
 
-        private void DrawSaveAndCloseButtons()
+        private void DrawButtonBar()
         {
             #region Draw Header Buttons
 
             GUILayout.BeginArea(buttonBar);
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("▼", GUILayout.Width(22), GUILayout.Height(16)))
+
+            if (GUILayout.Button("▼", EditorStyles.miniButton, GUILayout.Width(24), GUILayout.Height(16)))
             {
                 popup = !popup;
             }
 
-            if (GUILayout.Button("Save", GUILayout.Width(44), GUILayout.Height(16)))
+            if (GUILayout.Button("Save", EditorStyles.miniButton, GUILayout.Width(44), GUILayout.Height(16)))
             {
                 SaveScript();
-                documentChanged = "saved";
             }
 
-            if (GUILayout.Button("Close", GUILayout.Width(44), GUILayout.Height(16)))
+            if (GUILayout.Button("Close", EditorStyles.miniButton, GUILayout.Width(44), GUILayout.Height(16)))
             {
-                if (documentChanged == "not saved")
-                {
-                    if (EditorUtility.DisplayDialog("Close Script", "This will close the script without saving." + nl + "Are you sure?", "Confirm"))
-                    {
-                        this.Close();
-                    }
-                }
-                else { this.Close(); }
+                CloseWindow();
             }
+
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
 
@@ -365,16 +401,22 @@ namespace pwnedu.ScriptEditor
 
             var result = FindReplaceDialogue.ShowDialogueWindow("Find Text", find, true);
 
-            find = result.Item1;
+            find = result.Item2;
 
-            if (string.IsNullOrEmpty(find)) { Debug.Log("find is null"); return; }
+            if (string.IsNullOrEmpty(find)) 
+            { 
+                Debug.Log("find is null"); 
+                return; 
+            }
 
-            Debug.Log($"Finding All Matches for {find} with {replace}.");
+            Debug.Log($"Finding matches for {find}.");
 
             var indexes = FindPosition(find);
 
             editor.selectIndex = indexes.Item1;
             editor.cursorIndex = indexes.Item2;
+
+            find = string.Empty;
 
             #endregion
         }
@@ -400,11 +442,11 @@ namespace pwnedu.ScriptEditor
             if (string.IsNullOrEmpty(find)) { Debug.Log("find is null"); return; }
             if (string.IsNullOrEmpty(replace)) { Debug.Log("replace is null"); return; }
 
-            Debug.Log($"Replacing All Matches for {find} with {replace}.");
+            Debug.Log($"Replacing All Matches for {find} and replaced with {replace}.");
 
             codeText = codeText.Replace(find, replace);
-            find = "";
-            replace = "";
+            find = string.Empty;
+            replace = string.Empty;
             documentChanged = "not saved";
 
             #endregion
@@ -447,7 +489,7 @@ namespace pwnedu.ScriptEditor
 
             popup = false;
 
-            var save = SaveAsDialogue.ShowDialogueWindow("Rename File", renameFile);
+            var save = SaveAsDialogue.ShowDialogueWindow("Rename File", extension, renameFile);
             var oldFile = fileName;
 
             if (save.Item2 != string.Empty)
@@ -494,7 +536,7 @@ namespace pwnedu.ScriptEditor
 
             popup = false;
 
-            var save = SaveAsDialogue.ShowDialogueWindow("Save As", renameFile);
+            var save = SaveAsDialogue.ShowDialogueWindow("Save As", extension, renameFile);
 
             if (save.Item2 != string.Empty)
             {
@@ -552,14 +594,32 @@ namespace pwnedu.ScriptEditor
 
         //****************************************[ Functions ]****************************************//
 
+        private void TabSpace()
+        {
+            TextEditor editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+            codeText = codeText.Insert(editor.selectIndex, "\t");
+        }
         private void OpenScript()
         {
             #region Open Script Function
 
+            bool loadFile = false;
+
             referencePath = ScriptEditorUtility.GetSelectedPath();
             fileName = ScriptEditorUtility.GetSelectedFile();
 
-            if (fileName != defaultScript) // Open file.
+            var fileExtension = ScriptEditorUtility.GetExtension(referencePath, fileName);
+            foreach (var fileType in allowedExtensions)
+            {
+                if (fileExtension == fileType) 
+                {
+                    extension = fileExtension;
+                    loadFile = true;
+                    break;
+                }
+            }
+
+            if (fileName != defaultScript && loadFile) // Open the file.
             {
                 try
                 {
@@ -570,6 +630,7 @@ namespace pwnedu.ScriptEditor
                 }
                 catch (FileNotFoundException)
                 {
+                    // I don't think we will reach here anymore.
                     Debug.LogWarning("Incorrect file type. Script Editor only supports C# files, " + fileName + " is not a valid script file.");
                 }
             }
@@ -585,7 +646,7 @@ namespace pwnedu.ScriptEditor
                 if (!File.Exists(fileName))
                 {
                     //Debug.Log(fileName + extension + " is available."); 
-                    codeText = "using UnityEngine;" + nl + nl + "public class " + fileName + " : MonoBehaviour" + nl + "{" + nl + nl + "}" + nl;
+                    codeText = "using UnityEngine;" + nl + nl + "public class " + fileName + " : MonoBehaviour" + nl + "{" + nl + "\t" + nl + "}" + nl;
                     documentChanged = "not saved";
                 }
             }
@@ -610,6 +671,8 @@ namespace pwnedu.ScriptEditor
             AssetDatabase.ImportAsset(referencePath + fileName + extension); // Or re-import the file might be faster.
             ScriptEditorUtility.SelectFile(referencePath + fileName + extension);
 
+            documentChanged = "saved";
+
             #endregion
         }
 
@@ -626,13 +689,43 @@ namespace pwnedu.ScriptEditor
             renameFile = renameFile.Replace(".cs", "");
             fileName = renameFile;
             SaveScript();
-            documentChanged = "saved";
             renameFile = "";
         }
 
         private void DeleteScript(string file)
         {
             AssetDatabase.DeleteAsset(referencePath + file + extension);
+        }
+
+        private void CloseWindow()
+        {
+            #region Close Window Dialogue
+
+            if (documentChanged == "not saved")
+            {
+                int result = EditorUtility.DisplayDialogComplex("Close Script", "This will close the script without saving." + nl + "Are you sure?", "Confirm", "Cancel", "Save And Close");
+                
+                if (result == 0) 
+                { 
+                    Debug.Log("Closed."); 
+                    this.Close(); 
+                }
+                
+                if (result == 1) 
+                { 
+                    Debug.Log("Cancelled."); 
+                }
+                
+                if (result == 2) 
+                {
+                    Debug.Log("Saved before closing.");
+                    SaveScript(); 
+                    this.Close(); 
+                }
+            }
+            else { this.Close(); }
+
+            #endregion
         }
 
         //****************************************[ Style ]****************************************//
