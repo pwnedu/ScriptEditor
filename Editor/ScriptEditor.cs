@@ -186,6 +186,11 @@ namespace pwnedu.ScriptEditor
 
         private void OnGUI()
         {
+            if (lineDisplay || countDisplay)
+            {
+                numberOfLines = codeText.Split('\n').Length;
+            }
+
             #region Keyboard Input
 
             // Check first if key has been pressed
@@ -245,10 +250,6 @@ namespace pwnedu.ScriptEditor
 
             #endregion
 
-            if (lineDisplay || countDisplay)
-            {
-                numberOfLines = codeText.Split('\n').Length;
-            }
         }
 
         private void DrawLayout()
@@ -384,9 +385,11 @@ namespace pwnedu.ScriptEditor
             EditorGUI.BeginChangeCheck();
 
             GUILayout.BeginHorizontal();
+
             if (lineDisplay)
             {
                 GUILayout.BeginVertical();
+
                 var width = 12;
                 if (numberOfLines > 10) { width = 16; }
                 if (numberOfLines > 100) { width = 20; }
