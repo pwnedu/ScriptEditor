@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -106,7 +107,9 @@ namespace pwnedu.ScriptEditor
         {
             InitTextures();
             SetStyle();
-            numberOfLines = codeText.Split($"{Environment.NewLine}").Length;
+            List<string> s = new List<string>(codeText.Split(new string[] { Environment.NewLine }, StringSplitOptions.None));
+            numberOfLines = s.Count;
+            //numberOfLines = codeText.Split(Environment.NewLine).Length;
             revertText = codeText;
             focus = true;
         }
