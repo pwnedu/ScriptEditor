@@ -107,8 +107,6 @@ namespace pwnedu.ScriptEditor
         {
             InitTextures();
             SetStyle();
-            //List<string> s = new List<string>(codeText.Split(new string[] { Environment.NewLine }, StringSplitOptions.None));
-            //numberOfLines = s.Count;
             numberOfLines = codeText.Split(new string[] { Environment.NewLine }, StringSplitOptions.None).Length;
             revertText = codeText;
             focus = true;
