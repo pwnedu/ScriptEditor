@@ -12,7 +12,8 @@ namespace pwnedu.ScriptEditor
         #region Private Fields
 
         static Rect popupWindow;
-        public static ScriptStyle styleData;
+        private static ScriptStyle styleData;
+        public static ScriptStyle StyleData => styleData;
 
         static readonly string appName = "Script Editor";
         readonly string[] allowedExtensions = new string[6] { ".cs", ".csv", ".json", ".xml", ".txt", ".md" };

@@ -19,8 +19,8 @@ namespace pwnedu.ScriptEditor
         [MenuItem(menuItem + "Script Editor Settings", priority = 11)]
         public static void ScriptEditorSettings()
         {
-            EditorGUIUtility.PingObject(ScriptEditor.styleData);
-            Selection.activeObject = ScriptEditor.styleData;
+            EditorGUIUtility.PingObject(ScriptEditor.StyleData);
+            Selection.activeObject = ScriptEditor.StyleData;
         }
 
         [MenuItem(menuItem + "Script Editor Help", priority = 12)]
