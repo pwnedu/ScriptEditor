@@ -5,7 +5,7 @@
   "description": "A simplistic script editor for Unity.",
   "unity": "2018.1",
   "documentationUrl": "https://github.com/pwnedu/ScriptEditor/wiki",
-  "licensesUrl": "https://github.com/pwnedu/ScriptEditor/blob/main/LICENSE",
+  "licensesUrl": "https://github.com/pwnedu/ScriptEditor/blob/main/LICENSE.md",
   "keywords": [
     "unity",
     "tools",
