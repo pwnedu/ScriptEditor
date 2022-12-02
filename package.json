@@ -4,6 +4,7 @@
   "displayName": "Script Editor by pwnedu",
   "description": "A simplistic script editor for Unity.",
   "unity": "2018.1",
+  "changelogUrl": "https://github.com/pwnedu/ScriptEditor/blob/main/CHANGELOG.md",
   "documentationUrl": "https://github.com/pwnedu/ScriptEditor/wiki",
   "licensesUrl": "https://github.com/pwnedu/ScriptEditor/blob/main/LICENSE.md",
   "keywords": [
